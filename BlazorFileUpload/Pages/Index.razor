@@ -1,0 +1,54 @@
+﻿@page "/"
+@inject IConfiguration config
+<PageTitle>Upload Demo App</PageTitle>
+
+<h1>Upload Demo</h1>
+
+<InputFile OnChange="LoadFiles" class="form-control" multiple accept=".jpg,.jpeg,.txt" />
+
+@if (errors.Any())
+{
+    <h2>Erros:</h2>
+    <ul class="text-danger">
+        @foreach (var error in errors)
+        {
+            <li>@error</li>
+        }
+    </ul>
+
+}
+
+@code {
+    private long maxFileSize = 1024 * 1024 * 3;
+    private int maxAllowedFiles = 3;
+    private List<string> errors = new();
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        errors.Clear();
+
+        if (e.FileCount > maxAllowedFiles)
+        {
+            errors.Add($"O máximo de arquivos permitidos é {maxAllowedFiles}");
+        }
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        {
+            try
+            {
+                string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
+
+                string path = Path.Combine(config.GetValue<string>("FileStorage")!, "foo", newFileName);
+
+                Directory.CreateDirectory(Path.Combine(config.GetValue<string>("FileStorage")!, "foo"));
+
+                await using FileStream fs = new(path, FileMode.Create);
+                await file.OpenReadStream(maxFileSize).CopyToAsync(fs);
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"Arquivo: {file.Name}. Erro: {ex.Message}");
+            }
+        }
+    }
+}
