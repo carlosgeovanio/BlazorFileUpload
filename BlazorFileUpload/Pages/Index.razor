@@ -1,6 +1,9 @@
 ﻿@page "/"
+@using UploadFilesLibrary;
 @using BlazorFileUpload.Data;
-@inject IConfiguration config
+@inject ISqlDataAccess sql;
+@inject IConfiguration config;
+
 <PageTitle>Upload Demo App</PageTitle>
 
 <h1>Upload Demo</h1>
@@ -36,17 +39,23 @@
 
 @code {
     private long maxFileSize = 1024 * 1024 * 3;
-    private int maxAllowedFiles = 3;
     private List<string> errors = new();
     private Customer newCustomer = new();
     private IBrowserFile? file;
 
     private async Task SubmitForm()
     {
+        errors.Clear();
         try
         {
             string relativePath = await CaptureFile();
             newCustomer.FileName = relativePath;
+
+            await sql.SaveData("dbo.spCustomer_Insert", "Default", newCustomer);
+
+            newCustomer = new();
+            file = null;
+            errors.Clear();
         }
         catch (Exception ex)
         {
