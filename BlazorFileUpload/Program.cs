@@ -1,6 +1,4 @@
 using BlazorFileUpload.Data;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using UploadFilesLibrary;
 
 var builder = WebApplication.CreateBuilder(args);
